@@ -38,9 +38,16 @@ git CKAN_DIR do
   user USER
   group USER
   repository REPOSITORY
-  reference "master"
+  reference "5df8e6492bdd32862b159d6bc9ff99892973dde6" #@2.2
   enable_submodules true
 end
+
+# # Patch: 
+# https://github.com/ckan/ckan/pull/291
+#execute "Apply patch to a CKAN submodule..." do
+#  cwd CKAN_DIR
+ # command "patch -p1 ckanext/stats/__init__.py < ~/diff.patch"
+#end
 
 # Install CKAN Package
 python_pip CKAN_DIR do
@@ -52,7 +59,7 @@ python_pip CKAN_DIR do
 end
 
 # Install CKAN's requirements
-python_pip "#{CKAN_DIR}/pip-requirements.txt" do
+python_pip "#{CKAN_DIR}/pip-requirements-docs.txt" do
   user USER
   group USER
   virtualenv ENV['VIRTUAL_ENV']
@@ -69,6 +76,14 @@ end
 pg_database "ckan_dev" do
   owner "ckanuser"
   encoding "utf8"
+  locale "en_US.utf8"
+  template "template0"
+end
+
+execute "Create development ini file" do
+  user USER
+  cwd CKAN_DIR
+  command "paster make-config ckan /home/vagrant/pyenv/src/ckan/development.ini"
 end
 
 # Configure database variables
@@ -89,6 +104,7 @@ execute "setup solr's schema" do
   command "sudo ln -f -s #{CKAN_DIR}/ckan/config/solr/schema-2.0.xml /etc/solr/conf/schema.xml"
   action :run
 end
+
 service "jetty" do
   supports :status => true, :restart => true, :reload => true
   action [:enable, :start]
@@ -109,17 +125,9 @@ execute "create database tables" do
   command "paster --plugin=ckan db init"
 end
 
-# Run tests
-python_pip "#{CKAN_DIR}/pip-requirements-test.txt" do
-  user USER
-  group USER
-  virtualenv ENV['VIRTUAL_ENV']
-  options "-r"
-  action :install
-end
-
-execute "running tests with SQLite" do
-  user USER
-  cwd CKAN_DIR
-  command "nosetests --ckan ckan"
-end
+# These don't work.
+# execute "running tests with SQLite" do
+#   user USER
+#   cwd CKAN_DIR
+#   command "nosetests --ckan ckan"
+# end

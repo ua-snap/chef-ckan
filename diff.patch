@@ -1,0 +1,7 @@
+diff --git ckanext/stats/__init__.py ckanext/stats/__init__.py
+index b646540..2390066 100644
+--- ckanext/stats/__init__.py
++++ ckanext/stats/__init__.py
+@@ -1 +1,2 @@
+ # empty file needed for pylons to find templates in this directory
++__import__('pkg_resources').declare_namespace(__name__)
